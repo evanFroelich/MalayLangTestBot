@@ -38,6 +38,37 @@ class MyClient(discord.Client):
             return
         if message.author.bot:
             return
+        localMessage=message.content.lower()
+        if len(localMessage)>0:
+            splitString=localMessage.split('|')
+            if splitString[0]=='..quiz':
+                await message.channel.send("not ready yet")
+                return
+            if splitString[0]=='..addquestion':
+                #await message.channel.send("also not ready yet")
+                if(len(splitString)>=4 and len(splitString)<7):
+                    if isinstance(splitString[1],int) and isinstance(splitString[2],int):
+                        statment='''insert into Questions (Question, Reversable, NumAnswers, Answer1, Answer2, Answer3) values (?,?,?,?,?,?);'''
+                        data=(splitString[1], int(splitString[2]), int(splitString[3]), splitString[4], "NULL", "NULL")
+                        #try:
+
+                        DB_NAME="Main_DB"
+                        conn=sqlite3.connect(DB_NAME)
+                        curs=conn.cursor()
+                        curs.execute(statment,data)
+                        conn.commit()
+                        curs.close()
+                        conn.close()
+                        #except:
+                            #await message.channel.send("add fail")
+                            #return
+                        await message.channel.send("added question")
+                        return
+                        
+                await message.channel.send("invalid number of parameters")
+                return
+                
+        
 
 intents=discord.Intents.all()
 client=MyClient(intents=intents)

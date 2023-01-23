@@ -1,10 +1,10 @@
 create table if not exists Questions(
     Question text,
+    Reversable integer,
+    NumAnswers integer,
     Answer1 text,
     Answer2 text,
-    Asnwer3 text,
-    Reversable integer,
-    NumAnswers integer
+    Answer3 text
 
 );
 

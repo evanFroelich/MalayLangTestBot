@@ -7,8 +7,14 @@ from random import random
 from datetime import datetime
 
 
+
+
 class MyClient(discord.Client):
+    questionMode="open"
+    
     async def on_ready(self):
+        
+
         print('Logged on as {0}!'.format(self.user))
         DB_NAME="Main_DB"
         #SQL File with Table Schema and Initialization Data
@@ -38,34 +44,46 @@ class MyClient(discord.Client):
             return
         if message.author.bot:
             return
+
+        DB_NAME="Main_DB"
+        conn=sqlite3.connect(DB_NAME)
+        curs=conn.cursor()
+
         localMessage=message.content.lower()
         if len(localMessage)>0:
             splitString=localMessage.split('|')
+
             if splitString[0]=='..quiz':
-                await message.channel.send("not ready yet")
+                if self.questionMode=='open':
+                    self.questionMode='in-use'
+                    await message.channel.send(self.questionMode)
+                sqlStatment='''SELECT * FROM Questions ORDER BY RANDOM() LIMIT 1'''
+                tableRow=curs.execute(sqlStatment)
+                for row in tableRow:
+                    await message.channel.send(row)
+                curs.close()
+                conn.close()
                 return
-            if splitString[0]=='..addquestion':
+            if splitString[0]=='..format':
+                await message.channel.send("..add|question|reversable(1 or 0)|number of answers|answer1|answer2|answer3")
+            if splitString[0]=='..add':
                 #await message.channel.send("also not ready yet")
-                if(len(splitString)>=4 and len(splitString)<7):
-                    if isinstance(splitString[1],int) and isinstance(splitString[2],int):
+                splitString[2]=int(splitString[2])
+                splitString[3]=int(splitString[3])
+                if(len(splitString)>=4 and len(splitString)<8):
+                    if isinstance(splitString[2],int) and isinstance(splitString[3],int):
                         statment='''insert into Questions (Question, Reversable, NumAnswers, Answer1, Answer2, Answer3) values (?,?,?,?,?,?);'''
                         data=(splitString[1], int(splitString[2]), int(splitString[3]), splitString[4], "NULL", "NULL")
-                        #try:
-
-                        DB_NAME="Main_DB"
-                        conn=sqlite3.connect(DB_NAME)
-                        curs=conn.cursor()
                         curs.execute(statment,data)
                         conn.commit()
+                        await message.channel.send("added question")
                         curs.close()
                         conn.close()
-                        #except:
-                            #await message.channel.send("add fail")
-                            #return
-                        await message.channel.send("added question")
                         return
                         
-                await message.channel.send("invalid number of parameters")
+                await message.channel.send("invalid number of parameters:"+str(len(splitString)))
+                curs.close()
+                conn.close()
                 return
                 
         
